@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'UserProductView.dart';
 
 class PreOrders extends StatefulWidget {
   PreOrders();
@@ -64,6 +65,15 @@ class _PreOrdersState extends State<PreOrders> {
                         padding: EdgeInsets.all(
                             ResponsiveInfo.isMobile(context) ? 8 : 12),
                         child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UserProductView(), // Replace OtherPage with the desired page
+                              ),
+                            );
+                          },
+
                           child: Container(
                               padding: EdgeInsets.all(
                                   ResponsiveInfo.isMobile(context) ? 6 : 9),
@@ -85,7 +95,7 @@ class _PreOrdersState extends State<PreOrders> {
                                     fontWeight: FontWeight.normal),
                                 maxLines: 2,
                               )),
-                          onTap: () {},
+                          // onTap: () {},
                         )),
                     title: Text(
                       "Top Categories",
