@@ -1,10 +1,11 @@
 import 'dart:io';
-
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+
 import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
 
 
 void main() async {
@@ -31,7 +32,7 @@ class AdminPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Page'),
+        title: Text('Admin Page',style: TextStyle(fontSize: ResponsiveInfo.isMobile(context)?12:14,color: Colors.black),),
       ),
       body: ProductList(),
       floatingActionButton: FloatingActionButton(

@@ -4,6 +4,9 @@ import 'productdetailspage.dart';
 import 'productunit.dart';
 import 'orderedlist.dart';
 import 'pre_orders.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/ui/admin/category_page.dart';
+import 'package:ecommerce/ui/admin/uom_page.dart';
 
 
 class AdminHomePage extends StatefulWidget {
@@ -19,12 +22,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
         title: Row(
           children: [
             Icon(Icons.home),
-            SizedBox(width: 20),
+            SizedBox(width:ResponsiveInfo.isMobile(context)? 20:25),
             Text(
-              'Admin Home Page',
+              'Admin',
               style: TextStyle(
-                fontSize: 20.0,
+                fontSize: ResponsiveInfo.isMobile(context)? 14.0 :16.0,
                 fontWeight: FontWeight.bold,
+                color: Colors.white
               ),
             ),
           ],
@@ -33,49 +37,92 @@ class _AdminHomePageState extends State<AdminHomePage> {
         elevation: 4.0,
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(height: 30),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 20.0,
-                crossAxisSpacing: 20.0,
-                childAspectRatio: 1.5,
-                children: [
-                  _buildCategoryCard('User', Icons.person, () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => UserListPage()));
-                  }),
-                  _buildCategoryCard('Product', Icons.shopping_bag, () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => AdminPage()));
-                  }),
-                  _buildCategoryCard('Orders', Icons.add_shopping_cart, () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => OrderedListScreen()));
-                  }),
-                  _buildCategoryCard('Units', Icons.category_outlined, () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ProductListScreen()));
-                  }),
-                  // _buildCategoryCard('Categories', Icons.category_outlined, () {
-                  //   Navigator.push(context, MaterialPageRoute(builder: (context) => AdminPage()));
-                  // }),
-                ],
-              ),
-            ),
+        padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?10:15),
+        child: SingleChildScrollView(
 
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => PreOrders()), // Navigate to PreOrders page
-                  );
-                },
-                child: Text('PreOrders'), // Text on the button
-              ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?10:15),
+
+                child: Text(
+                  'Dashboard',
+                  style: TextStyle(
+                      fontSize: ResponsiveInfo.isMobile(context)? 14.0 :16.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black
+                  ),
+                ),
+              ) ,
+
+
+              GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: ResponsiveInfo.isMobile(context)?15:20,
+                  crossAxisSpacing: ResponsiveInfo.isMobile(context)?15:20,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  primary: false,
+                  childAspectRatio: 1.5,
+                  children: [
+                    _buildCategoryCard('User', Icons.person, () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => UserListPage()));
+                    }),
+                    _buildCategoryCard('Category', Icons.category, () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryPage()));
+                    }),
+                    _buildCategoryCard('Product', Icons.shopping_bag, () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => AdminPage()));
+                    }),
+                    _buildCategoryCard('Orders', Icons.add_shopping_cart, () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => OrderedListScreen()));
+                    }),
+                    _buildCategoryCard('Units', Icons.scale, () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => UomPage()));
+                    }),
+                    _buildCategoryCard('Sales Orders', Icons.list_alt, () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PreOrders()), // Navigate to PreOrders page
+                      );
+                    }),
+
+                    _buildCategoryCard('Offers', Icons.local_offer_outlined, () {
+
+                    }),
+
+                    _buildCategoryCard('wallet requests', Icons.wallet, () {
+
+                    }),
+
+
+                    // _buildCategoryCard('Categories', Icons.category_outlined, () {
+                    //   Navigator.push(context, MaterialPageRoute(builder: (context) => AdminPage()));
+                    // }),
+                  ],
+                ),
+
+
+
+
+              // ElevatedButton(
+              //   onPressed: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => PreOrders()), // Navigate to PreOrders page
+              //     );
+              //   },
+              //   child: Text('PreOrders'), // Text on the button
+              // ),
             ],
 
-        ),
+          ),
+          scrollDirection: Axis.vertical,
+        )
+
+
+
       ),
     );
   }
@@ -113,7 +160,7 @@ class UserListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User List'),
+        title: Text('User List',style: TextStyle(fontSize:  ResponsiveInfo.isMobile(context)?13:15,color: Colors.white)),
       ),
       body: UserList(),
     );
@@ -142,29 +189,36 @@ class UserList extends StatelessWidget {
           itemCount: users.length,
           itemBuilder: (context, index) {
             final user = users[index];
-            return Card(
-              color: Colors.blue.withOpacity(0.1), // Set the color of the card
+            return Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?6:12),
+
+            child:Card(
+              color: Colors.white,
+              elevation: 5,// Set the color of the card
               child: ListTile(
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?6:10),
                 leading: Icon(Icons.person, color: Colors.blue),
                 title: Text(
                   user['name'] ?? 'No Name',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: ResponsiveInfo.isMobile(context)?13:15,
                   ),
                 ),
                 subtitle: Text(
                   user['email'] ?? 'No Email',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: ResponsiveInfo.isMobile(context)?13:15,
                   ),
                 ),
                 onTap: () {
 
                 },
               ),
-            );
+            ) ,
+
+            )
+
+              ;
           },
         );
       },

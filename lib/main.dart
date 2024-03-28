@@ -4,7 +4,13 @@ import 'package:ecommerce/designs/ResponsiveInfo.dart';
 import 'package:ecommerce/ui/login.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_core/firebase_core.dart'; // Import Firebase Core
+import 'package:firebase_core/firebase_core.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/dashboard.dart';
+import 'package:ecommerce/ui/home.dart';
+import 'package:ecommerce/ui/adminhome.dart';
+
+// Import Firebase Core
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,16 +71,52 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void checkLogin() async {
-    final preferenceDataStorage = await SharedPreferences.getInstance();
+    final preferenceDataStorage = await SharedPreferences
+        .getInstance();
+ String? userid=   preferenceDataStorage.getString(Constants.pref_userid);
+ String? usertype=   preferenceDataStorage.getString(Constants.pref_usertype);
 
-    Timer(
-      const Duration(seconds: 3),
-          () => Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>  Login(),
-        ),
-      ),
-    );
+ if(userid!=null && userid.toString().isNotEmpty) {
+
+   if(usertype.toString().compareTo(Constants.admin_usertype)==0) {
+     Timer(
+       const Duration(seconds: 3),
+           () =>
+           Navigator.pushReplacement(
+             context,
+             MaterialPageRoute(
+               builder: (context) => AdminHomePage(),
+             ),
+           ),
+     );
+   }
+   else{
+
+     Timer(
+       const Duration(seconds: 3),
+           () =>
+           Navigator.pushReplacement(
+             context,
+             MaterialPageRoute(
+               builder: (context) => MyDashboardPage(),
+             ),
+           ),
+     );
+
+   }
+ }
+ else{
+
+   Timer(
+     const Duration(seconds: 3),
+         () =>
+         Navigator.pushReplacement(
+           context,
+           MaterialPageRoute(
+             builder: (context) => Login(),
+           ),
+         ),
+   );
+ }
   }
 }

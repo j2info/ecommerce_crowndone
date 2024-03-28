@@ -5,6 +5,8 @@ import 'package:ecommerce/ui/adminhome.dart';
 import 'package:ecommerce/ui/dashboard.dart';
 import 'package:ecommerce/ui/registration.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
 
 class Login extends StatefulWidget {
   Login();
@@ -173,12 +175,19 @@ class _LoginState extends State<Login> {
     }
 
     // Query Firestore to check if the user exists and get their userType
-    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('users').where('name', isEqualTo: name).where('password', isEqualTo: password).get();
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('users').where('email', isEqualTo: name).where('password', isEqualTo: password).get();
 
     // If query returns a document, check if it's an admin
     if (querySnapshot.docs.isNotEmpty) {
-      String userType = querySnapshot.docs.first.data()['usertype'];
-      return userType == '31aAARMH4Mbu0gy6HlJ4';
+      // String userType = querySnapshot.docs.first.data()['usertype'];
+   String userid=   querySnapshot.docs.first.id;
+
+   final preferenceDataStorage = await SharedPreferences
+       .getInstance();
+   preferenceDataStorage.setString(Constants.pref_userid, userid);
+   preferenceDataStorage.setString(Constants.pref_usertype, Constants.admin_usertype);
+   return true;
+      // return userType == '31aAARMH4Mbu0gy6HlJ4';
     }
 
     // If no document found, return false
@@ -190,10 +199,19 @@ class _LoginState extends State<Login> {
     await Firebase.initializeApp();
 
     // Query Firestore to check if the user exists in registration collection
-    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('registration').where('name', isEqualTo: name).where('password', isEqualTo: password).get();
+    QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('registration').where('email', isEqualTo: name).where('password', isEqualTo: password).get();
 
     // If query returns a document, user credentials are valid
     if (querySnapshot.docs.isNotEmpty) {
+
+      String userid=   querySnapshot.docs.first.id;
+
+      final preferenceDataStorage = await SharedPreferences
+          .getInstance();
+      preferenceDataStorage.setString(Constants.pref_userid, userid);
+      preferenceDataStorage.setString(Constants.pref_usertype, Constants.normal_usertype);
+
+
       return true;
     }
 
