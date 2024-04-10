@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
 
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+
 class WalletRequest extends StatefulWidget {
    WalletRequest() ;
 
@@ -11,9 +22,12 @@ class WalletRequest extends StatefulWidget {
 class _WalletRequestState extends State<WalletRequest> {
 
 
+TextEditingController amountcontroller=new TextEditingController();
 
-
-
+TextEditingController accountcontroller=new TextEditingController();
+TextEditingController bankcontroller=new TextEditingController();
+TextEditingController ifsccontroller=new TextEditingController();
+TextEditingController bankaddresscontroller=new TextEditingController();
 
 
 
@@ -106,6 +120,7 @@ Navigator.pop(context);
                       ),
                       child: TextField(
                         keyboardType: TextInputType.number,
+                        controller: amountcontroller,
                         decoration: InputDecoration(
                             border: InputBorder.none,
 
@@ -167,6 +182,7 @@ Navigator.pop(context);
                       // padding: EdgeInsets.symmetric(horizontal: 15,vertical: 50),
                       child: TextField(
                         keyboardType: TextInputType.number,
+                        controller: accountcontroller,
                         decoration: InputDecoration(
                             border: InputBorder.none,
 
@@ -220,7 +236,8 @@ Navigator.pop(context);
 
                       // padding: EdgeInsets.symmetric(horizontal: 15,vertical: 50),
                       child: TextField(
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.text,
+                        controller: bankcontroller,
                         decoration: InputDecoration(
                             border: InputBorder.none,
 
@@ -273,7 +290,8 @@ Navigator.pop(context);
 
                       // padding: EdgeInsets.symmetric(horizontal: 15,vertical: 50),
                       child: TextField(
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.text,
+                        controller: ifsccontroller,
                         decoration: InputDecoration(
                             border: InputBorder.none,
                             // labelText: 'Enter Password',
@@ -324,7 +342,9 @@ Navigator.pop(context);
 
                       // padding: EdgeInsets.symmetric(horizontal: 15,vertical: 50),
                       child: TextField(
-                        keyboardType: TextInputType.number,
+                        keyboardType: TextInputType.text,
+                        controller: bankaddresscontroller,
+
                         decoration: InputDecoration(
                             border: InputBorder.none,
                             // labelText: 'Enter Password',
@@ -347,41 +367,53 @@ Navigator.pop(context);
               child: Row(
     children: [
       
-      Expanded(child: Padding(
-    child:Container(
-      width: double.infinity,
+      Expanded(child: GestureDetector(
 
-      decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black54),
-          borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+      child: Padding(
+        child:Container(
+          width: double.infinity,
 
+          decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.black54),
+              borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+
+          ),
+
+
+          child:  TextButton(
+            child: Text( 'Cancel', style: TextStyle(color: Colors.black, fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.bold),
+            ),
+            onPressed: ()async{
+
+
+
+
+
+
+
+            },
+
+          ),
+
+        ) ,
+        padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
       ),
+        onTap: (){
 
-
-      child:  TextButton(
-        child: Text( 'Cancel', style: TextStyle(color: Colors.black, fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.bold),
-        ),
-        onPressed: ()async{
-
-
-
-
-
-
+        Navigator.pop(context);
 
         },
+      )
 
-      ),
 
-    ) ,
-        padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-    )
 
 
       ,flex: 1,),
-      Expanded(child:Padding(
-    child: Container(
+      Expanded(child:GestureDetector(
+
+    child: Padding(
+      child: Container(
         width: double.infinity,
 
         decoration: BoxDecoration(
@@ -398,7 +430,103 @@ Navigator.pop(context);
           onPressed: ()async{
 
 
+            if(amountcontroller.text.isNotEmpty)
+            {
+              if(accountcontroller.text.isNotEmpty)
+              {
+                if(bankcontroller.text.isNotEmpty)
+                {
+                  if(ifsccontroller.text.isNotEmpty)
+                  {
 
+                    if(bankaddresscontroller.text.isNotEmpty)
+                    {
+
+                      double d=double.parse(amountcontroller.text);
+
+                      if(d<=1000) {
+                        showLoaderDialog(context);
+                        final preferenceDataStorage = await SharedPreferences
+                            .getInstance();
+                        String? id = preferenceDataStorage.getString(
+                            Constants.pref_userid);
+
+                        await FirebaseFirestore.instance.collection(
+                            'wallet_requests').add({
+                          'amount': amountcontroller.text,
+                          'account_number': accountcontroller.text,
+                          'bank': bankcontroller.text,
+                          'ifsc': ifsccontroller.text,
+                          'bankaddress': bankaddresscontroller.text,
+                          'user_id': id.toString(),
+                          'approval_status':'pending'
+                        }).whenComplete(() {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('Amount Request send Successfully'),
+                          ));
+
+                          Navigator.pop(context);
+                          Navigator.pop(context);
+                        });
+                      }
+                      else{
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Enter amount below 1000 Rs'),
+                          ),
+                        );
+                      }
+
+
+                    }
+                    else{
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Enter Bank Address'),
+                        ),
+                      );
+                    }
+                  }
+                  else{
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Enter IFSC'),
+                      ),
+                    );
+                  }
+
+                }
+                else{
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Enter bank name'),
+                    ),
+                  );
+                }
+
+              }
+              else{
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Enter Account no.'),
+                  ),
+                );
+              }
+
+            }
+            else{
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Enter amount'),
+                ),
+              );
+            }
 
 
 
@@ -408,8 +536,18 @@ Navigator.pop(context);
         ),
 
       ),
-        padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-      ),flex: 1,)
+      padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
+    ) ,
+        onTap: ()async{
+
+
+
+
+        },
+    )
+
+
+     ,flex: 1,)
       
       
     ],
@@ -443,4 +581,20 @@ Navigator.pop(context);
 
     );
   }
+
+showLoaderDialog(BuildContext context){
+  AlertDialog alert=AlertDialog(
+    content: new Row(
+      children: [
+        CircularProgressIndicator(),
+        Container(margin: EdgeInsets.only(left: 7),child:Text("Loading..." )),
+      ],),
+  );
+  showDialog(barrierDismissible: false,
+    context:context,
+    builder:(BuildContext context){
+      return alert;
+    },
+  );
+}
 }

@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:ecommerce/ui/home.dart';
+import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/login.dart';
+import 'package:image_picker/image_picker.dart';
 
 class Profile extends StatefulWidget {
    Profile() ;
@@ -10,7 +24,54 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
 
+  String name="";
+  String email="";
+  String image="";
 
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getUserDetails();
+  }
+
+  Future<void> _getImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+
+       var _image = File(pickedFile.path);
+
+       // final ref = FirebaseStorage.instance.ref()
+       //     .child('product_images')
+       //     .child('${DateTime.now()}.jpg');
+       // await ref.putFile(_image!);
+       // final imageUrl = await ref.getDownloadURL();
+
+       final ref = FirebaseStorage.instance.ref()
+           .child('profile_images')
+           .child('${DateTime.now()}.jpg');
+       await ref.putFile(_image!);
+       final imageUrl = await ref.getDownloadURL();
+
+       final preferenceDataStorage = await SharedPreferences
+           .getInstance();
+       String? id=  preferenceDataStorage.getString(Constants.pref_userid);
+
+       showLoaderDialog(context);
+
+       await FirebaseFirestore.instance.collection('registration').doc(id).update({'image':imageUrl}).then((value) {
+
+         Navigator.pop(context);
+
+         getUserDetails();
+
+       });
+
+
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,23 +118,31 @@ class _ProfileState extends State<Profile> {
             Padding(padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)?12:14),
 
 
-                child: CircleAvatar(
+                child: (image.isNotEmpty)?
+
+
+                CircleAvatar(
                   radius: 55.0,
                   backgroundImage:
-                  NetworkImage('https://htmlstream.com/preview/unify-v2.6/assets/img-temp/400x450/img5.jpg'),
+                  NetworkImage(image),
                   backgroundColor: Colors.transparent,
-                )              ),
+                ) : Container(
+
+                  child: Icon(Icons.account_circle,color: Colors.black54,size: 110,),
+
+
+                )             ),
 
             Padding(padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
 
-                child:  Text( 'Madhu varma', style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,
+                child:  Text( name, style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,
                     fontSize: ResponsiveInfo.isMobile(context)?16:19))
 
             ),
 
             Padding(padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
 
-                child:  Text( 'madhu@gmail.com', style: TextStyle(color: Colors.black54,fontWeight: FontWeight.normal,
+                child:  Text( email, style: TextStyle(color: Colors.black54,fontWeight: FontWeight.normal,
                     fontSize: ResponsiveInfo.isMobile(context)?14:17))
 
             ),
@@ -115,6 +184,45 @@ class _ProfileState extends State<Profile> {
 
                   ),
                   onTap: (){
+                    Widget okButton = TextButton(
+                      child: Text("yes"),
+                      onPressed: ()async {
+
+                        Navigator.pop(context);
+                        _getImage();
+
+
+                      },
+                    );
+
+                    Widget okButton1 = TextButton(
+                      child: Text("no"),
+                      onPressed: () {
+
+                        Navigator.pop(context);
+
+
+                      },
+                    );
+
+                    // set up the AlertDialog
+                    AlertDialog alert = AlertDialog(
+                      title: Text("Profile"),
+                      content: Text("Do you want to change profile image now ?"),
+                      actions: [
+                        okButton,
+                        okButton1
+                      ],
+                    );
+
+                    // show the dialog
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return alert;
+                      },
+                    );
+
 
 
 
@@ -212,7 +320,9 @@ class _ProfileState extends State<Profile> {
 
         Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
 
-          child: Container(
+          child: GestureDetector(
+
+    child: Container(
             height:ResponsiveInfo.isMobile(context)? 60 : 75,
             decoration: BoxDecoration(
                 color: Color(0xffffffff),
@@ -227,27 +337,145 @@ class _ProfileState extends State<Profile> {
 
 
           ),
+          onTap: (){
+
+            Widget okButton = TextButton(
+              child: Text("yes"),
+              onPressed: ()async {
+
+                final preferenceDataStorage = await SharedPreferences
+                    .getInstance();
+                preferenceDataStorage.setString(Constants.pref_userid, "");
+                preferenceDataStorage.setString(Constants.pref_usertype, "");
+
+                Navigator.pop(context);
+
+
+                Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+
+
+
+              },
+            );
+
+            Widget okButton1 = TextButton(
+              child: Text("no"),
+              onPressed: () {
+
+                Navigator.pop(context);
+
+              },
+            );
+
+            // set up the AlertDialog
+            AlertDialog alert = AlertDialog(
+              title: Text("Logout"),
+              content: Text("Do you want to logout now ?"),
+              actions: [
+                okButton,
+                okButton1
+              ],
+            );
+
+            // show the dialog
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return alert;
+              },
+            );
+
+
+          },
+          )
 
         ),
 
 
         Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
 
-          child: Container(
-            height:ResponsiveInfo.isMobile(context)? 60 : 75,
-            decoration: BoxDecoration(
-                color: Color(0xffffffff),
-                border: Border.all(color: Color(0xffffffff)),
-                borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+          child: GestureDetector(
 
-            ),
-            child: ListTile(
-                leading:  Icon(Icons.delete,color: Colors.black,size: ResponsiveInfo.isMobile(context)?20:25),
-                trailing: Icon(Icons.arrow_forward_ios_rounded,color: Colors.black,size: ResponsiveInfo.isMobile(context)?20:25,) ,
-                title: Text("Delete Account",style: TextStyle(fontSize:ResponsiveInfo.isMobile(context)?13:17,color: Colors.black ),)),
+    child:     Container(
+      height:ResponsiveInfo.isMobile(context)? 60 : 75,
+      decoration: BoxDecoration(
+          color: Color(0xffffffff),
+          border: Border.all(color: Color(0xffffffff)),
+          borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+
+      ),
+      child: ListTile(
+          leading:  Icon(Icons.delete,color: Colors.black,size: ResponsiveInfo.isMobile(context)?20:25),
+          trailing: Icon(Icons.arrow_forward_ios_rounded,color: Colors.black,size: ResponsiveInfo.isMobile(context)?20:25,) ,
+          title: Text("Delete Account",style: TextStyle(fontSize:ResponsiveInfo.isMobile(context)?13:17,color: Colors.black ),)),
 
 
-          ),
+    ),
+            onTap: (){
+
+              Widget okButton = TextButton(
+                child: Text("yes"),
+                onPressed: ()async {
+                  showLoaderDialog(context);
+
+                  final preferenceDataStorage = await SharedPreferences
+                      .getInstance();
+
+                  String? id = preferenceDataStorage.getString(Constants.pref_userid);
+                  await FirebaseFirestore.instance.collection('registration').doc(id.toString()).delete().then((value) {
+
+                    Navigator.pop(context);
+                    preferenceDataStorage.setString(Constants.pref_userid, "");
+                    preferenceDataStorage.setString(Constants.pref_usertype, "");
+
+                    Navigator.pop(context);
+
+
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+
+                  });
+
+
+
+
+
+                },
+              );
+
+              Widget okButton1 = TextButton(
+                child: Text("no"),
+                onPressed: () {
+
+                  Navigator.pop(context);
+
+                },
+              );
+
+              // set up the AlertDialog
+              AlertDialog alert = AlertDialog(
+                title: Text("Delete Account"),
+                content: Text("Do you want to Delete your account now ?"),
+                actions: [
+                  okButton,
+                  okButton1
+                ],
+              );
+
+              // show the dialog
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return alert;
+                },
+              );
+
+
+
+            },
+    )
+
+
+
 
         )
 
@@ -277,4 +505,58 @@ class _ProfileState extends State<Profile> {
 
     );
   }
+
+
+  getUserDetails()async{
+
+    final preferenceDataStorage = await SharedPreferences
+        .getInstance();
+    String? id=  preferenceDataStorage.getString(Constants.pref_userid);
+
+    await FirebaseFirestore.instance.collection('registration').doc(id).get().then((value) {
+
+
+      Map<String,dynamic> m= value.data()!;
+
+      setState(() {
+
+
+
+
+        name=m['name'];
+        email=m['email'];
+        image=m['image'];
+
+
+
+
+      });
+
+
+
+
+
+    });
+
+
+
+  }
+
+  showLoaderDialog(BuildContext context){
+    AlertDialog alert=AlertDialog(
+      content: new Row(
+        children: [
+          CircularProgressIndicator(),
+          Container(margin: EdgeInsets.only(left: 7),child:Text("Loading..." )),
+        ],),
+    );
+    showDialog(barrierDismissible: false,
+      context:context,
+      builder:(BuildContext context){
+        return alert;
+      },
+    );
+  }
+
+
 }

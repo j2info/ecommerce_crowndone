@@ -16,6 +16,8 @@ class _RegistrationState extends State<Registration> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  late var p1;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +73,7 @@ class _RegistrationState extends State<Registration> {
             // Email Address
             buildTextField("Email Address", _emailController),
             // Phone Number
-            buildTextField("Phone Number", _phoneController),
+            buildTextField("Phone Number", _phoneController,ismobile:true),
             // Password
             buildTextField("Password", _passwordController, isPassword: true),
 
@@ -89,11 +91,7 @@ class _RegistrationState extends State<Registration> {
                   onPressed: () async {
                     // Save user details to Firestore
                     await saveUserDetails();
-                    // Navigate to verification screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Verification()),
-                    );
+
                   },
                   child: Text(
                     'Signup',
@@ -372,7 +370,7 @@ class _RegistrationState extends State<Registration> {
     );
   }
 
-  Widget buildTextField(String labelText, TextEditingController controller, {bool isPassword = false}) {
+  Widget buildTextField(String labelText, TextEditingController controller, {bool isPassword = false,bool ismobile = false} ) {
     return Padding(
       padding: EdgeInsets.all(ResponsiveInfo.isMobile(context) ? 10 : 14),
       child: Column(
@@ -403,6 +401,7 @@ class _RegistrationState extends State<Registration> {
             child: TextField(
               controller: controller,
               obscureText: isPassword,
+              keyboardType: (ismobile)? TextInputType.phone : TextInputType.text ,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: 'Enter $labelText',
@@ -422,19 +421,165 @@ class _RegistrationState extends State<Registration> {
     String phone = _phoneController.text.trim();
     String password = _passwordController.text;
 
-    // Add user details to Firestore
-    await FirebaseFirestore.instance.collection('registration').add({
-      'name': name,
-      'email': email,
-      'phone': phone,
-      'password': password,
-      'timestamp': DateTime.now(),
-    });
+    if(name.isNotEmpty) {
+      if(email.isNotEmpty) {
+        if(phone.isNotEmpty) {
 
-    // Clear text fields after saving
-    _nameController.clear();
-    _emailController.clear();
-    _phoneController.clear();
-    _passwordController.clear();
+          if(password.isNotEmpty) {
+
+            if(password.length>=8) {
+      // Add user details to Firestore
+
+            showLoaderDialog(context);
+
+            final productSnapshot = await FirebaseFirestore.instance.collection('registration').get();
+
+        List<dynamic>c=    productSnapshot.docs.toList();
+            bool a=false;
+        for(int i=0;i<c.length;i++)
+          {
+
+            QueryDocumentSnapshot ab=c[i];
+
+            var m = ab.data() as Map<String,dynamic>;
+
+
+            String  email1 = m['email'];
+            if(email.compareTo(email1)==0)
+            {
+              a=true;
+
+            }
+
+          }
+
+
+
+
+                if(!a)
+                  {
+
+                    p1=  await FirebaseFirestore.instance.collection('registration').add({
+                      'name': name,
+                      'email': email,
+                      'phone': phone,
+                      'password': password,
+                      'timestamp': DateTime.now(),
+                      'isverified': false,
+                      'image':""
+                    }).whenComplete(() {
+
+                      Navigator.pop(context);
+
+                      _nameController.clear();
+                      _emailController.clear();
+                      _phoneController.clear();
+                      _passwordController.clear();
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Verification(p1.id)),
+                      );
+
+                    });
+                  }
+                else{
+Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('This email ID is already registered'),
+                    ),
+                  );
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      // Clear text fields after saving
+            }
+            else{
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Your Password should contain atleast 8 characters'),
+                ),
+              );
+            }
+
+
+
+
+          }
+          else{
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Enter password'),
+              ),
+            );
+          }
+
+        }
+        else{
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Enter phone'),
+            ),
+          );
+        }
+
+      }
+      else{
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Enter email'),
+          ),
+        );
+      }
+
+
+
+    }
+    else{
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Enter name'),
+        ),
+      );
+    }
+
   }
+
+
+  showLoaderDialog(BuildContext context){
+    AlertDialog alert=AlertDialog(
+      content: new Row(
+        children: [
+          CircularProgressIndicator(),
+          Container(margin: EdgeInsets.only(left: 7),child:Text("Loading..." ,style: TextStyle(fontSize: 12,color: Colors.black),)),
+        ],),
+    );
+    showDialog(barrierDismissible: false,
+      context:context,
+      builder:(BuildContext context){
+        return alert;
+      },
+    );
+  }
+
+
 }

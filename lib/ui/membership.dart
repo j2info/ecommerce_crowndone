@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/ui/dashboard.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/payment_page.dart';
+import 'package:ecommerce/ui/home.dart';
 
 class Membership extends StatefulWidget {
+
+
+
    Membership() ;
 
   @override
@@ -11,8 +27,10 @@ class Membership extends StatefulWidget {
 class _MembershipState extends State<Membership> {
 
 
-List<String>arr=["Enterpreneur Membership","Distributor Membership","Investor Membership"];
-List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c];
+List<String>arr=["Enterpreneur Membership","Distributor Membership","Investor Membership","Producer Membership"];
+List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c,0xffb84060];
+
+List<String>amounts=["10000","5000","3000","15000"];
 
 
   @override
@@ -38,6 +56,26 @@ List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c];
               fontFamily: 'poppins',
               fontWeight: FontWeight.bold),
         ),
+
+        actions: [
+
+          TextButton(
+
+            child:Text(
+              "Skip",
+              style: TextStyle(color: Colors.blue, fontSize: 15),
+            ) ,
+            onPressed: (){
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MyDashboardPage()),
+              );
+
+
+            },
+          )
+        ],
 
       ),
 
@@ -79,6 +117,8 @@ List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c];
                         width: double.infinity,
                         height: ResponsiveInfo.isMobile(context)?175:215,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Expanded(child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,7 +134,7 @@ List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c];
                                     )),
 
                                 Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-                                    child: Text( "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
+                                    child: Text( "choose "+arr[index]+" plan ",
                                       style: TextStyle(color: Colors.white,
                                           fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
                                       maxLines: 2,
@@ -110,7 +150,7 @@ List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c];
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-                                    child: Text( "Membership Fee \n 1000 Rs",
+                                    child: Text( "Membership Fee \n "+amounts[index]+" Rs",
                                       style: TextStyle(color: Colors.white,
                                           fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
                                       maxLines: 2,
@@ -120,25 +160,48 @@ List<int>arrcolor=[0xff1f5796,0xff956e01,0xff5b918c];
                                     )),
 
                                 Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
+                                    child: GestureDetector(
+
                                     child:Container(
-                                      padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)? 3 : 6),
+                                        padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)? 3 : 6),
 
-                                      decoration: BoxDecoration(
+                                        decoration: BoxDecoration(
 
-                                          border: Border.all(color: Colors.white),
-                                          borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+                                            border: Border.all(color: Colors.white),
+                                            borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
 
-                                      ),
-
-
-                                  child:  Text( "Choose   > ",
-                                      style: TextStyle(color: Colors.white,
-                                          fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
-                                      maxLines: 2,
+                                        ),
 
 
+                                        child:  Text( "Choose   > ",
+                                          style: TextStyle(color: Colors.white,
+                                              fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
+                                          maxLines: 2,
 
-                                    ))
+
+
+                                        )),
+                                      onTap: ()async{
+
+                                        final preferenceDataStorage = await SharedPreferences
+                                            .getInstance();
+                                      String? id=  preferenceDataStorage.getString(Constants.pref_userid);
+                                        // preferenceDataStorage.setString(Constants.pref_usertype, Constants.normal_usertype);
+
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => PaymentPage(amounts[index], arr[index],id.toString()),
+                                          ),
+                                        );
+
+
+
+                                      },
+                                    )
+
+
+
 
                                 )
 

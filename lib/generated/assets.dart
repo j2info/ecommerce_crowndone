@@ -20,6 +20,7 @@ class Assets {
   static const String imagesProductimg = '/Users/saveapp/ECommerce/assets/images/productimg.png';
   static const String imagesQr = '/Users/saveapp/ECommerce/assets/images/qr.png';
   static const String imagesShoppingcart = '/Users/saveapp/ECommerce/assets/images/shoppingcart.png';
+  static const String imagesUpiqr = '/Users/saveapp/ECommerce/assets/images/upiqr.png';
   static const String imagesWallet = '/Users/saveapp/ECommerce/assets/images/wallet.png';
   static const String imagesWalletbg = '/Users/saveapp/ECommerce/assets/images/walletbg.png';
 

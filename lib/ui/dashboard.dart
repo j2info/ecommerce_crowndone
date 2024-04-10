@@ -1,5 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/payment_page.dart';
+import 'package:ecommerce/ui/home.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class Dashboard extends StatefulWidget {
    Dashboard();
@@ -9,6 +22,23 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+
+
+  String name="";
+  String mno="";
+  String mtype="";
+  String stdate="";
+  String enddate="";
+  String allotno="";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getUserDetails();
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +69,7 @@ class _DashboardState extends State<Dashboard> {
       children: [
 
         Icon(Icons.person_outline,color: Colors.white,),
-                    Text( '   Madhu varma', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14))
+                    Text( '   '+name, style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14))
 
       ],
 
@@ -50,15 +80,21 @@ class _DashboardState extends State<Dashboard> {
                 Padding(padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)?12:14),
 
 
-                    child: Image.asset("assets/images/qr.png",
-                      width:ResponsiveInfo.isMobile(context)?150:180,height:ResponsiveInfo.isMobile(context)?150:180 ,fit: BoxFit.fill,)
+                    child:            QrImageView(
+                      data: mno,
+                      version: QrVersions.auto,
+                      backgroundColor: Colors.white70,
+                      size: ResponsiveInfo.isMobile(context)?150:180,
+                    ),
+
+
                 ),
 
 
     Padding(padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)?12:14),
 
 
-    child:Text( 'Membership number: 123566898999', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
+    child:Text( 'Membership number: '+mno, style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
 
     )),
 
@@ -75,7 +111,7 @@ class _DashboardState extends State<Dashboard> {
 
                         ),
 
-                        Text( 'Enterprenuer', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
+                        Text( ''+mtype, style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
 
                         )
                       ],
@@ -96,7 +132,7 @@ class _DashboardState extends State<Dashboard> {
 
                         ),
 
-                        Text( '30 January 2024', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
+                        Text( ''+stdate, style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
 
                         )
                       ],
@@ -116,7 +152,7 @@ class _DashboardState extends State<Dashboard> {
 
                         ),
 
-                        Text( '30 January 2024', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
+                        Text( ''+enddate, style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
 
                         )
                       ],
@@ -137,7 +173,7 @@ class _DashboardState extends State<Dashboard> {
 
                         ),
 
-                        Text( '123123/515', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
+                        Text( ''+allotno, style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?12:14)
 
                         )
                       ],
@@ -254,6 +290,58 @@ class _DashboardState extends State<Dashboard> {
         ],
       ),
 
+    );
+  }
+
+  getUserDetails()async{
+
+    final preferenceDataStorage = await SharedPreferences
+        .getInstance();
+    String? id=  preferenceDataStorage.getString(Constants.pref_userid);
+
+    await FirebaseFirestore.instance.collection('registration').doc(id).get().then((value) {
+
+
+  Map<String,dynamic> m= value.data()!;
+
+  setState(() {
+
+
+
+mno=m['membershipno'];
+name=m['name'];
+mtype=m['membertype'];
+allotno=m['allotment_type'];
+stdate=m['startDate'];
+enddate=m['endDate'];
+
+
+
+  });
+
+
+
+
+
+    });
+
+
+
+  }
+
+  showLoaderDialog(BuildContext context){
+    AlertDialog alert=AlertDialog(
+      content: new Row(
+        children: [
+          CircularProgressIndicator(),
+          Container(margin: EdgeInsets.only(left: 7),child:Text("Loading..." )),
+        ],),
+    );
+    showDialog(barrierDismissible: false,
+      context:context,
+      builder:(BuildContext context){
+        return alert;
+      },
     );
   }
 }

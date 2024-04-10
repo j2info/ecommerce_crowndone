@@ -9,7 +9,20 @@ import 'package:ecommerce/ui/dashboard.dart';
 import 'package:ecommerce/ui/wallets.dart';
 import 'package:ecommerce/ui/profile.dart';
 import 'package:ecommerce/ui/pre_orders.dart';
-
+import 'package:ecommerce/ui/sales_order.dart';
+import 'package:badges/badges.dart' as badge;
+import 'package:ecommerce/ui/cart_page.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:ecommerce/domain/ProductVariants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
 
 
 
@@ -37,17 +50,14 @@ import 'package:ecommerce/ui/pre_orders.dart';
   class _MyDashboardPage extends State<MyDashboardPage> {
   int _counter = 0;
   int _selectedIndex=0;
+  int a=0;
 
   bool _fromTop=true;
 
   // final dbHelper = new DatabaseHelper();
 
   static  List<Widget> _pages = <Widget>[
-  // HomePage(title: 'home'),
-  // NetworkPage(title: "Network"),
-  // ReportPage(title: "report"),
 
-  // MorePage(title: "more"),
 
     Dashboard(),
     Wallets(),
@@ -61,9 +71,8 @@ PreOrders()
   @override
   void initState() {
   // TODO: implement initState
-
-
   super.initState();
+  getCartCount();
   }
 
 
@@ -105,7 +114,10 @@ PreOrders()
         leading: IconButton(
             onPressed: () {
 
-
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SalesOrder()),
+              );
 
             }, icon: Icon(Icons.menu,color: Colors.black,)),
         elevation: 0,
@@ -120,6 +132,27 @@ PreOrders()
               fontWeight: FontWeight.bold),
         ),
         actions: [
+
+          Padding(padding: EdgeInsets.all(15),
+
+              child: GestureDetector(
+
+                child:   badge.Badge(
+                  child: Icon(Icons.shopping_cart,size: 25,color: Colors.black54,),
+                  badgeContent: Text(a.toString(),style: TextStyle(fontSize: 12),),
+                ) ,
+                onTap: (){
+
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => CartPage()));
+
+
+                },
+              )
+
+
+
+
+          ),
 
           Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)? 8 :16),
 
@@ -270,7 +303,38 @@ PreOrders()
     });
   }
 
+  getCartCount()async{
 
+    final preferenceDataStorage = await SharedPreferences
+        .getInstance();
+    String? uid=  preferenceDataStorage.getString(Constants.pref_userid);
+
+    final productSnapshot = await FirebaseFirestore.instance.collection('cart').get();
+
+
+    List<dynamic>c=    productSnapshot.docs.toList();
+
+    a=0;
+
+    for(int i=0;i<c.length;i++) {
+      QueryDocumentSnapshot ab = c[i];
+
+      var m = ab.data() as Map<String, dynamic>;
+      String userid=m['userid'];
+      if(userid.compareTo(uid.toString())==0)
+      {
+
+        setState(() {
+          a=a+1;
+
+        });
+      }
+
+
+    }
+
+
+  }
 
 
 }

@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
 import 'package:ecommerce/ui/wallet_request.dart';
+import 'package:ecommerce/domain/WalletAmount.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/login.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/ui/payment_page.dart';
 
 class Wallets extends StatefulWidget {
    Wallets() ;
@@ -10,6 +25,25 @@ class Wallets extends StatefulWidget {
 }
 
 class _WalletsState extends State<Wallets> {
+
+  TextEditingController userController=new TextEditingController();
+
+
+  List<WalletAmount>wam=[];
+
+  double wb=0.0;
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getWalletAmount();
+
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,7 +54,8 @@ class _WalletsState extends State<Wallets> {
 
         children: [
 
-          Expanded(child: Column(
+          Expanded(child:
+          Column(
 
             children: [
               Expanded(child:   Padding(
@@ -73,7 +108,7 @@ class _WalletsState extends State<Wallets> {
                             ),
 
                             Padding(padding: EdgeInsets.all(4),
-                                child: Text( '₹10,000.00', style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?20:25,fontWeight: FontWeight.bold),
+                                child: Text( '₹ '+wb.toString(), style: TextStyle(color: Colors.white, fontSize: ResponsiveInfo.isMobile(context)?20:25,fontWeight: FontWeight.bold),
 
 
                                 ))
@@ -136,29 +171,99 @@ class _WalletsState extends State<Wallets> {
 
                         ),
                         child: ListTile(
-                          trailing:      Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-                                child:Container(
-                                    padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)? 6 : 9),
+                          trailing:   GestureDetector(
+    child:Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
+        child:Container(
+            padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)? 6 : 9),
 
-                                    decoration: BoxDecoration(
-                                      color: Color(0xff2453a4),
+            decoration: BoxDecoration(
+                color: Color(0xff2453a4),
 
-                                        border: Border.all(color: Color(0xff2453a4)),
-                                        borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+                border: Border.all(color: Color(0xff2453a4)),
+                borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
 
+            ),
+
+
+            child:  Text( "Invest now   > ",
+              style: TextStyle(color: Colors.white,
+                  fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
+              maxLines: 2,
+
+
+
+            ))
+
+    ),
+                            onTap: (){
+
+                              Widget okButton1 = TextButton(
+                                child: Text("ok"),
+                                onPressed: () async{
+
+                                  if(!userController.text.isEmpty) {
+
+                                    final preferenceDataStorage = await SharedPreferences
+                                        .getInstance();
+                                    String? id=  preferenceDataStorage.getString(Constants.pref_userid);
+
+                                      Navigator.pop(context);
+
+
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PaymentPage(userController.text, "Wallet Amount",id.toString()),
+                                        ),
+                                      );
+
+
+                                  }
+                                  else{
+
+
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                      content: Text('Enter unit'),
+                                    ));
+                                  }
+
+
+                                },
+                              );
+
+                              // set up the AlertDialog
+                              AlertDialog alert = AlertDialog(
+                                title:Container(),
+                                content:         Padding(
+                                  padding: EdgeInsets.all(ResponsiveInfo.isMobile(context) ? 10 : 15),
+                                  child: TextField(
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: 'Amount to Invest',
+                                      hintText: 'Enter Amount to Wallet',
                                     ),
+                                    controller: userController,
+                                  ),
+                                ),
+                                actions: [
+
+                                  okButton1
+                                ],
+                              );
+
+                              // show the dialog
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return alert;
+                                },
+                              );
 
 
-                                    child:  Text( "Invest now   > ",
-                                      style: TextStyle(color: Colors.white,
-                                          fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
-                                      maxLines: 2,
+                            },
 
-
-
-                                    ))
-
-                            ),
+    )   ,
                             title: Text("Invest more",style: TextStyle(color: Colors.black, fontSize: ResponsiveInfo.isMobile(context)?17:20,fontWeight: FontWeight.bold),),
                         subtitle:Text("Add funds to your wallet",style: TextStyle(color: Colors.black54, fontSize: ResponsiveInfo.isMobile(context)?12:15),) ,
 
@@ -256,83 +361,90 @@ class _WalletsState extends State<Wallets> {
 
       color: Colors.white,
 
-      child: Column(
+      child: SingleChildScrollView(
 
-        children: [
+        child: Column(
 
-          Padding(
+          children: [
 
-            child:Container(
-              height: ResponsiveInfo.isMobile(context)? 80 : 120,
+            Padding(
 
-              decoration: BoxDecoration(
-                  color: Color(0xffffffff),
-                  border: Border.all(color: Color(0xffffffff)),
-                  borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+              child:Container(
+                height: ResponsiveInfo.isMobile(context)? 80 : 120,
 
-              ),
-
-              child: ListTile(
-
-
-                trailing:Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-                    child:Container(
-                        padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)? 6 : 9),
-
-                        decoration: BoxDecoration(
-                            color: Color(0xff2453a4),
-
-                            border: Border.all(color: Color(0xff2453a4)),
-                            borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
-
-                        ),
-
-
-                        child:  Text( " View all > ",
-                          style: TextStyle(color: Colors.white,
-                              fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
-                          maxLines: 2,
-
-
-
-                        ))
+                decoration: BoxDecoration(
+                    color: Color(0xffffffff),
+                    border: Border.all(color: Color(0xffffffff)),
+                    borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
 
                 ),
-                title: Text("Transaction History",style: TextStyle(color: Colors.black, fontSize: ResponsiveInfo.isMobile(context)?17:20,fontWeight: FontWeight.bold),),
-                subtitle:Text("All transactions",style: TextStyle(color: Colors.black54, fontSize: ResponsiveInfo.isMobile(context)?12:15),) ,
 
-              ),
+                child: ListTile(
 
-            )  ,
-            padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
-          ),
 
-       ListView.builder(
-                itemCount: 2,
+                  trailing:Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
+                      child:Container(
+                          padding:  EdgeInsets.all(ResponsiveInfo.isMobile(context)? 6 : 9),
+
+                          decoration: BoxDecoration(
+                              color: Color(0xff2453a4),
+
+                              border: Border.all(color: Color(0xff2453a4)),
+                              borderRadius: BorderRadius.all(Radius.circular(ResponsiveInfo.isMobile(context)? 10 : 15))
+
+                          ),
+
+
+                          child:  Text( " View all > ",
+                            style: TextStyle(color: Colors.white,
+                                fontSize: ResponsiveInfo.isMobile(context)?12:14,fontWeight: FontWeight.normal),
+                            maxLines: 2,
+
+
+
+                          ))
+
+                  ),
+                  title: Text("Transaction History",style: TextStyle(color: Colors.black, fontSize: ResponsiveInfo.isMobile(context)?17:20,fontWeight: FontWeight.bold),),
+                  subtitle:Text("All transactions",style: TextStyle(color: Colors.black54, fontSize: ResponsiveInfo.isMobile(context)?12:15),) ,
+
+                ),
+
+              )  ,
+              padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?8:12),
+            ),
+
+            ListView.builder(
+                itemCount: wam.length,
                 primary: false,
                 shrinkWrap: true,
                 itemBuilder: (BuildContext context, int index) {
                   return ListTile(
                       leading:  Icon(Icons.credit_card_sharp),
-                      subtitle:Text("12th jan 2024 3.00 am",
+                      subtitle:Text(wam[index].t_date,
                         style: TextStyle(color: Colors.black54, fontSize: ResponsiveInfo.isMobile(context)?12:15),) ,
 
                       trailing:  Text(
-                        "₹2,500.00",
+                        "₹"+wam[index].amount,
 
                         style: TextStyle(color: Colors.black,  fontSize: ResponsiveInfo.isMobile(context)?13:15),
                       ),
-                      title: Text("Withdrawn",
+                      title: Text(wam[index].type,
                         style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black,fontSize: ResponsiveInfo.isMobile(context)?15:17),));
                 }) ,
 
 
 
 
-        ],
+          ],
 
 
-      ),
+        ),
+        scrollDirection: Axis.vertical,
+      )
+
+
+
 
     ),
             padding: EdgeInsets.fromLTRB(ResponsiveInfo.isMobile(context)? 10 : 15,  ResponsiveInfo.isMobile(context)? 10 : 15, ResponsiveInfo.isMobile(context)? 10 : 15, 0),
@@ -358,4 +470,93 @@ class _WalletsState extends State<Wallets> {
 
     );
   }
+
+
+
+  getWalletAmount()async{
+
+    // showLoaderDialog(context);
+    double e=0;
+    final productSnapshot = await FirebaseFirestore.instance.collection('wallet_balance').get();
+    final preferenceDataStorage = await SharedPreferences
+        .getInstance();
+    String? id=  preferenceDataStorage.getString(Constants.pref_userid);
+    List<dynamic>c=    productSnapshot.docs.toList();
+    bool a=false;
+    // Navigator.pop(context);
+    for(int i=0;i<c.length;i++)
+    {
+
+      QueryDocumentSnapshot ab=c[i];
+
+      var m = ab.data() as Map<String,dynamic>;
+
+
+      String  user_id = m['user_id'];
+      if(user_id.compareTo(id.toString())==0)
+      {
+
+        WalletAmount wa=new WalletAmount();
+        wa.type=m['type'];
+        wa.amount=m['amount'];
+        wa.t_date=m['date'];
+
+        String am=m['amount'];
+        if(am.isNotEmpty)
+          {
+            double d=double.parse(am);
+            if(m['type'].toString().compareTo("withdraw")==0) {
+              e = e - d;
+            }
+            else{
+
+              e = e + d;
+            }
+
+          }
+
+
+
+
+        setState(() {
+
+          wam.add(wa);
+        });
+
+      }
+
+    }
+
+    setState(() {
+
+      wb=e;
+    });
+
+
+
+
+
+
+  }
+
+
+
+  showLoaderDialog(BuildContext context){
+    AlertDialog alert=AlertDialog(
+      content: new Row(
+        children: [
+          CircularProgressIndicator(),
+          Container(margin: EdgeInsets.only(left: 7),child:Text("Loading..." )),
+        ],),
+    );
+    showDialog(barrierDismissible: false,
+      context:context,
+      builder:(BuildContext context){
+        return alert;
+      },
+    );
+  }
 }
+
+
+

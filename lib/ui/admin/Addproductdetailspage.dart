@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-
+import 'package:ecommerce/domain/CategoryData.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
 
@@ -170,73 +170,39 @@ class AddProductPage extends StatefulWidget {
 class _AddProductPageState extends State<AddProductPage> {
   String _selectedHsnCode = hsnCodes.first;
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _itemDescriptionController = TextEditingController(); // Combine controller for item and description
+  final TextEditingController _itemDescriptionController = TextEditingController();
+  final TextEditingController _itemNameController = TextEditingController(); // Combine controller for item and description
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _hsnCodeController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _extraInput1Controller = TextEditingController();
   final TextEditingController _extraInput2Controller = TextEditingController();
   File? _image;
+List<String>categories=[];
+  List<CategoryData>categoriesobj=[];
 
-  bool _manualHsnCodeEntry = false;
-  Future<void> _getImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
+  String selectcategory="Select Category";
 
-  void _addProduct() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final ref = FirebaseStorage.instance.ref().child('product_images').child('${DateTime.now()}.jpg');
-        await ref.putFile(_image!);
-        final imageUrl = await ref.getDownloadURL();
 
-        final productRef = FirebaseFirestore.instance.collection('products').doc(); // Generate a new document reference without specifying an ID
-        final productId = productRef.id; // Get the automatically generated ID
-        await productRef.set({
-          'id': productId, // Set the ID of the product as a field in the document
-          'name_description': _itemDescriptionController.text,
-          'image': imageUrl,
-          'price': double.parse(_priceController.text),
-          'hsnCode': _manualHsnCodeEntry ? _hsnCodeController.text : _selectedHsnCode,
-          'Qty': _categoryController.text,
-          'Discount': _extraInput1Controller.text,
-          'Amount': _extraInput2Controller.text,
-        });
 
-        final hsnCodeToAdd = _manualHsnCodeEntry ? _hsnCodeController.text : _selectedHsnCode;
-        final hsnCodeDoc = FirebaseFirestore.instance.collection('hsnCodes').doc(hsnCodeToAdd);
-        final productIds = await hsnCodeDoc.get().then((doc) => doc?.exists ?? false ? List.from(doc!.data()!['products']) : []);
-        productIds.add(productId); // Add the product ID to the list
-        await hsnCodeDoc.set({'products': productIds});
+  List<String>units=[];
+  List<CategoryData>unitobjs=[];
 
-        _itemDescriptionController.clear();
-        _priceController.clear();
-        _hsnCodeController.clear();
-        _categoryController.clear();
-        _extraInput1Controller.clear();
-        _extraInput2Controller.clear();
-        setState(() {
-          _image = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Product added successfully'),
-          ),
-        );
-      } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to add product: $error'),
-          ),
-        );
-      }
-    }
+  String selectunit="Select unit";
+  CategoryData selected_categoryobj=new CategoryData("0","", "");
+
+
+CategoryData unitobjs_selected=new CategoryData("0","", "");
+
+String productId="0";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getCategoryList();
+    getUnitList();
+
   }
 
 
@@ -245,7 +211,17 @@ class _AddProductPageState extends State<AddProductPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Product'),
+        elevation: 0,
+        backgroundColor: Colors.black87,
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+              Navigator.pop(context);
+            }
+        ),
+        title: Text("Add Product",style: TextStyle(color: Colors.white,fontSize: 12),),
+        centerTitle: false,
+
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -256,33 +232,83 @@ class _AddProductPageState extends State<AddProductPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_image != null) ...[
+                 (_image != null) ?
                   Container(
-                    height: 80,
+                    height: 150,
                     width: double.infinity, // Adjust width as needed
                     child: Image.file(
                       _image!,
                       fit: BoxFit.cover,
                     ),
-                  ),
-                  SizedBox(height: 10),
-                ],
+                  ) :      Container(
+              height: 150,
+              width: double.infinity, // Adjust width as needed
+              child: Icon(Icons.image,color: Colors.black26,size:120),
+            ),
+                  SizedBox(height: 30),
+
 
                 ElevatedButton(
                   onPressed: _getImage,
                   child: Text('Add Image'),
                 ),
+
                 TextFormField(
-                  controller: _itemDescriptionController, // Use combined controller for item and description
-                  decoration: InputDecoration(labelText: 'Item & Description'),
-                  maxLines: 5,// Update label
+                  controller: _itemNameController, // Use combined controller for item and description
+                  decoration: InputDecoration(labelText: 'Name'),
+                  maxLines: 1,// Update label
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return 'Please enter item and description';
+                      return 'Please enter product name';
                     }
                     return null;
                   },
                 ),
+                TextFormField(
+                  controller: _itemDescriptionController, // Use combined controller for item and description
+                  decoration: InputDecoration(labelText: 'Description'),
+                  maxLines: 5,// Update label
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Please enter description';
+                    }
+                    return null;
+                  },
+                ),
+
+                Padding(padding: EdgeInsets.all(10),
+
+                child: DropdownButton<String>(
+                  value: selectcategory,
+                  onChanged: (value) {
+                    setState(() {
+
+                      selectcategory = value!;
+                      productId="";
+                      for(int i=0;i<categoriesobj.length;i++)
+                        {
+                          if(categoriesobj[i].name.compareTo(selectcategory)==0)
+                            {
+                              selected_categoryobj=categoriesobj[i];
+                              break;
+                            }
+
+
+                        }
+
+
+                    });
+                  },
+                  items: categories.map((String hsnCode) {
+                    return DropdownMenuItem<String>(
+                      value: hsnCode,
+                      child: Text(hsnCode),
+                    );
+                  }).toList(),
+                  disabledHint: Text('Select category'),
+                ),
+                )
+                ,
                 Row(
                   children: [
                     Checkbox(
@@ -326,9 +352,25 @@ class _AddProductPageState extends State<AddProductPage> {
                     ),
                   ],
                 ),
+
+
+                SizedBox(height: 20),
+
+                Padding(padding: EdgeInsets.all(10),
+
+                    child: Text("Add Product variant details",style: TextStyle(color: Colors.black,fontSize: 12),)
+
+                ),
+
+                SizedBox(height: 20),
+
+
+
+
+
                 TextFormField(
                   controller: _categoryController,
-                  decoration: InputDecoration(labelText: '  Qty'),
+                  decoration: InputDecoration(labelText: 'Stock'),
                   // keyboardType: TextInputType.number,
                   validator: (value) {
                     // Validation logic for Category field
@@ -369,6 +411,54 @@ class _AddProductPageState extends State<AddProductPage> {
                   },
                 ),
                 SizedBox(height: 20),
+
+
+
+                Padding(padding: EdgeInsets.all(10),
+
+                  child: DropdownButton<String>(
+                    value: selectunit,
+                    onChanged: (value) {
+                      setState(() {
+
+
+                        selectunit = value!;
+
+                        for(int i=0;i<unitobjs.length;i++)
+                          {
+                            if(unitobjs[i].name.compareTo(selectunit)==0)
+                              {
+                                unitobjs_selected=unitobjs[i];
+                                break;
+
+                              }
+
+
+
+                          }
+
+
+
+
+                      });
+                    },
+                    items: units.map((String hsnCode) {
+                      return DropdownMenuItem<String>(
+                        value: hsnCode,
+                        child: Text(hsnCode),
+                      );
+                    }).toList(),
+                    disabledHint: Text('Select unit'),
+                  )
+
+                )
+                ,
+
+
+
+
+                SizedBox(height: 20),
+
                 ElevatedButton(
                   onPressed: _addProduct,
                   child: Text('Add Product'),
@@ -380,6 +470,179 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
   }
+
+  bool _manualHsnCodeEntry = false;
+  Future<void> _getImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  void _addProduct() async {
+
+    if(selected_categoryobj.id.compareTo("0")!=0) {
+      if (_formKey.currentState!.validate()) {
+        try {
+          final ref = FirebaseStorage.instance.ref()
+              .child('product_images')
+              .child('${DateTime.now()}.jpg');
+          await ref.putFile(_image!);
+          final imageUrl = await ref.getDownloadURL();
+
+          var productRef;
+
+          if(productId.isEmpty) {
+             productRef = FirebaseFirestore.instance.collection(
+                'product_master')
+                .doc();
+            productId = productRef.id;
+          }
+          else{
+            productRef = FirebaseFirestore.instance.collection(
+                'product_master')
+                .doc(productId);
+
+          }
+
+          // Generate a new document reference without specifying an ID
+
+           print(productId);// Get the automatically generated ID
+          await productRef.set({
+            // 'id': productId, // Set the ID of the product as a field in the document
+            'name': _itemNameController.text,
+            'image': imageUrl,
+            'description': _itemDescriptionController.text,
+            'hsnCode': _manualHsnCodeEntry
+                ? _hsnCodeController.text
+                : _selectedHsnCode,
+            'category': selected_categoryobj.id
+            // 'price': double.parse(_priceController.text),
+            // 'hsnCode': _manualHsnCodeEntry ? _hsnCodeController.text : _selectedHsnCode,
+            // 'Qty': _categoryController.text,
+            // 'Discount': _extraInput1Controller.text,
+            // 'Amount': _extraInput2Controller.text,
+          });
+
+          final productRef1 = FirebaseFirestore.instance.collection('products')
+              .doc();
+
+          await productRef1.set({
+             'id': productId, // Set the ID of the product as a field in the document
+
+            'price': double.parse(_priceController.text),
+            'hsnCode': _manualHsnCodeEntry ? _hsnCodeController.text : _selectedHsnCode,
+            'Qty': _categoryController.text,
+            'units':unitobjs_selected.id,
+            'Discount': _extraInput1Controller.text,
+            'Amount': _extraInput2Controller.text,
+          });
+
+          // final hsnCodeToAdd = _manualHsnCodeEntry
+          //     ? _hsnCodeController.text
+          //     : _selectedHsnCode;
+          // final hsnCodeDoc = FirebaseFirestore.instance.collection('hsnCodes')
+          //     .doc(hsnCodeToAdd);
+          // final productIds = await hsnCodeDoc.get().then((doc) =>
+          // doc?.exists ?? false ? List.from(doc!.data()!['products']) : []);
+          // productIds.add(productId); // Add the product ID to the list
+          // await hsnCodeDoc.set({'products': productIds});
+
+          // _itemDescriptionController.clear();
+          _priceController.clear();
+          // _hsnCodeController.clear();
+          _categoryController.clear();
+          _extraInput1Controller.clear();
+          _extraInput2Controller.clear();
+          // setState(() {
+          //   _image = null;
+          // });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('One Product variant added successfully.Enter details to add another'),
+            ),
+          );
+        } catch (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to add product: $error'),
+            ),
+          );
+        }
+      }
+    }
+    else{
+
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Select Category'),
+        duration: Duration(seconds: 2),
+      ));
+
+
+
+
+    }
+  }
+
+  getCategoryList()async{
+    final productSnapshot = await FirebaseFirestore.instance.collection('categories').get();
+
+    String id="";
+    categories.clear();
+    categoriesobj.clear();
+    categories.add(selectcategory);
+    categoriesobj.add(new CategoryData("0", selectcategory, ""));
+
+    productSnapshot.docs.forEach((element) {
+
+      id=element.id;
+      var m=element.data();
+      print (m);
+
+      setState(() {
+        categories.add(m['name']);
+        categoriesobj.add(new CategoryData(id, m['name'], m['image_path']));
+
+      });
+
+
+
+    });
+
+
+  }
+
+  getUnitList()async{
+    final productSnapshot = await FirebaseFirestore.instance.collection('units').get();
+
+    String id="";
+    units.clear();
+    unitobjs.clear();
+    units.add(selectunit);
+    unitobjs.add(new CategoryData("0", selectunit, ""));
+
+    productSnapshot.docs.forEach((element) {
+
+      id=element.id;
+      var m=element.data();
+      print (m);
+      setState(() {
+        units.add(m['name']);
+        unitobjs.add(new CategoryData(id, m['name'], ""));
+
+      });
+
+
+
+    });
+
+
+  }
+
 }
 
 

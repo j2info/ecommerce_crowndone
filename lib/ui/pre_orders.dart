@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
 import 'UserProductView.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/admin/product_details_admin_page.dart';
+import 'package:ecommerce/ui/products_by_category.dart';
+import 'package:ecommerce/domain/Products.dart';
+import 'package:ecommerce/ui/product_list_page.dart';
 
 class PreOrders extends StatefulWidget {
   PreOrders();
@@ -10,6 +25,25 @@ class PreOrders extends StatefulWidget {
 }
 
 class _PreOrdersState extends State<PreOrders> {
+
+
+
+  List<CategoryData>list=[];
+
+  List<Products>list_products=[];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    getCategoryList();
+    getProductList();
+
+  }
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,64 +73,78 @@ class _PreOrdersState extends State<PreOrders> {
                             ResponsiveInfo.isMobile(context) ? 10 : 15))),
 
                     // padding: EdgeInsets.symmetric(horizontal: 15,vertical: 50),
-                    child: TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                          border: InputBorder.none,
-                          suffixIcon: Icon(Icons.search,
-                              size: ResponsiveInfo.isMobile(context) ? 20 : 24),
-                          // labelText: 'Enter Password',
-                          hintStyle: TextStyle(
-                              fontSize:
-                                  ResponsiveInfo.isMobile(context) ? 14 : 17,
-                              color: Colors.black26),
-                          hintText: 'Search a product'),
-                      style: TextStyle(
-                          fontSize: ResponsiveInfo.isMobile(context) ? 14 : 17,
-                          color: Colors.black87),
-                    ),
+                    child:Autocomplete(
+                      optionsBuilder: (TextEditingValue
+                      textEditingValue) async {
+                        if (textEditingValue.text == '') {
+                          return const Iterable<
+                              String>.empty();
+                        } else {
+
+                          List<String> matches = <String>[];
+                          for(int i=0;i<list_products.length;i++)
+                            {
+                              if(list_products[i].name.toLowerCase().contains(          textEditingValue.text
+                                  .toLowerCase()))
+                                {
+
+                                  matches.add(list_products[i].name);
+                                }
+
+
+                            }
+
+
+
+                          return matches;
+                        }
+                      },
+                      fieldViewBuilder: ((context,
+                          textEditingController,
+                          focusNode,
+                          onFieldSubmitted) {
+                        return TextFormField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+
+                          onEditingComplete: onFieldSubmitted,
+                          decoration: InputDecoration(
+                              border: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              errorBorder: InputBorder.none,
+                              suffixIcon: Icon(Icons.search,
+                                  size: ResponsiveInfo.isMobile(context) ? 20 : 24),
+                              disabledBorder:
+                              InputBorder.none,
+                              hintText:
+                              'Search Product'),
+                        );
+                      }),
+                      onSelected: (String selection) {
+                        print('You just selected $selection');
+                        for(int i=0;i<list_products.length;i++)
+                        {
+                          if(selection.compareTo(list_products[i].name)==0)
+                          {
+
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailsAdminPage(list_products[i].id,"user")));
+
+                            break;
+                          }
+
+
+                        }
+
+                      },
+                    ) ,
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.all(
                       ResponsiveInfo.isMobile(context) ? 10 : 15),
                   child: ListTile(
-                    trailing: Padding(
-                        padding: EdgeInsets.all(
-                            ResponsiveInfo.isMobile(context) ? 8 : 12),
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UserProductView(), // Replace OtherPage with the desired page
-                              ),
-                            );
-                          },
 
-                          child: Container(
-                              padding: EdgeInsets.all(
-                                  ResponsiveInfo.isMobile(context) ? 6 : 9),
-                              decoration: BoxDecoration(
-                                  color: Color(0xff2453a4),
-                                  border: Border.all(color: Color(0xff2453a4)),
-                                  borderRadius: BorderRadius.all(
-                                      Radius.circular(
-                                          ResponsiveInfo.isMobile(context)
-                                              ? 10
-                                              : 15))),
-                              child: Text(
-                                " See all  > ",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: ResponsiveInfo.isMobile(context)
-                                        ? 12
-                                        : 14,
-                                    fontWeight: FontWeight.normal),
-                                maxLines: 2,
-                              )),
-                          // onTap: () {},
-                        )),
                     title: Text(
                       "Top Categories",
                       style: TextStyle(
@@ -115,50 +163,69 @@ class _PreOrdersState extends State<PreOrders> {
                 Padding(
                   padding: EdgeInsets.all(
                       ResponsiveInfo.isMobile(context) ? 10 : 15),
-                  child: SingleChildScrollView(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.all(
-                              ResponsiveInfo.isMobile(context) ? 8 : 12),
-                          child: Image.asset(
-                            "assets/images/cat1.png",
-                            width: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                            height: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(
-                              ResponsiveInfo.isMobile(context) ? 8 : 12),
-                          child: Image.asset(
-                            "assets/images/cat2.png",
-                            width: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                            height: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(
-                              ResponsiveInfo.isMobile(context) ? 8 : 12),
-                          child: Image.asset(
-                            "assets/images/cat3.png",
-                            width: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                            height: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(
-                              ResponsiveInfo.isMobile(context) ? 8 : 12),
-                          child: Image.asset(
-                            "assets/images/cat4.png",
-                            width: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                            height: ResponsiveInfo.isMobile(context) ? 75 : 90,
-                          ),
-                        )
-                      ],
+                  child: SizedBox(
+
+                    width: double.infinity,
+                    height:  ResponsiveInfo.isMobile(context) ? 130 : 150,
+
+                    child:      ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: List.generate(
+                        list.length,
+                            (i) => GestureDetector(
+
+                              child:Padding(padding: EdgeInsets.all(ResponsiveInfo.isMobile(context) ? 8 : 12),
+
+                                child: Container(
+                                  width: ResponsiveInfo.isMobile(context) ? 100 : 120,
+                                  height:ResponsiveInfo.isMobile(context) ? 74 : 90 ,
+                                  color: Colors.white,
+
+                                  alignment: Alignment.center,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Image.network(list[i].imagepath,width:ResponsiveInfo.isMobile(context) ? 65 : 75 ,
+
+                                        height:ResponsiveInfo.isMobile(context) ? 65 : 75 ,fit: BoxFit.fill,
+                                      ),
+                                      Text(
+                                        list[i].name,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: ResponsiveInfo.isMobile(context)
+                                                ? 12
+                                                : 14,
+                                            fontWeight: FontWeight.normal),
+                                        maxLines: 2,
+                                      )
+
+
+
+                                    ],
+                                  ),
+                                ),
+
+                              ) ,
+                              onTap: (){
+
+                                Navigator.push(context, MaterialPageRoute(builder: (context) =>
+                                    ProductsByCategory(list[i].id)));
+
+
+                              },
+                            )
+
+
+
+
+                      ),
                     ),
-                  ),
+                  )
+
+
+
                 ),
                 Padding(
                   padding: EdgeInsets.all(
@@ -189,7 +256,11 @@ class _PreOrdersState extends State<PreOrders> {
                                     fontWeight: FontWeight.normal),
                                 maxLines: 2,
                               )),
-                          onTap: () {},
+                          onTap: () {
+
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => ProductListPage()));
+
+                          },
                         )),
                     title: Text(
                       "Featured Products",
@@ -214,8 +285,17 @@ class _PreOrdersState extends State<PreOrders> {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: List.generate(
-                        3,
-                        (i) => Padding(
+                        (list_products.length>3)?3: list_products.length ,
+                        (i) => GestureDetector(
+                          onTap: (){
+
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailsAdminPage(list_products[i].id,"user")));
+
+
+                          },
+
+                          child:
+                            Padding(
                             padding: EdgeInsets.all(
                                 ResponsiveInfo.isMobile(context) ? 5 : 8),
                             child: SizedBox(
@@ -232,14 +312,19 @@ class _PreOrdersState extends State<PreOrders> {
                                         CrossAxisAlignment.center,
                                     children: [
                                       Expanded(
-                                        child: Image.asset(
-                                          "assets/images/productimg.png",
+                                        child:  Padding(
+                                  padding: EdgeInsets.all(
+                                      ResponsiveInfo.isMobile(context) ? 5 : 8),
+
+                                      child:  Image.network(list_products[i].imagepath
+                                          ,
                                           width: double.infinity,
                                           height:
                                               ResponsiveInfo.isMobile(context)
                                                   ? 70
                                                   : 85,
-                                        ),
+                                          fit: BoxFit.fill,
+                                        ) ),
                                         flex: 1,
                                       ),
                                       Expanded(
@@ -256,16 +341,17 @@ class _PreOrdersState extends State<PreOrders> {
                                                         ? 3
                                                         : 6),
                                                 child: Text(
-                                                  "Lubeck Honey Plus Herbs",
+                                                  list_products[i].name,
                                                   style: TextStyle(
-                                                      color: Colors.black54,
+                                                      color: Colors.black,
+                                                      fontWeight: FontWeight.bold,
                                                       fontSize: ResponsiveInfo
                                                               .isMobile(context)
-                                                          ? 12
-                                                          : 15),
+                                                          ? 14
+                                                          : 17),
                                                 )),
                                             Text(
-                                              "₹19.99",
+                                              list_products[i].price,
                                               style: TextStyle(
                                                   color: Colors.black,
                                                   fontSize:
@@ -281,7 +367,7 @@ class _PreOrdersState extends State<PreOrders> {
                                       )
                                     ],
                                   ),
-                                ))),
+                                ))) ),
                       ),
                     ),
                   ),
@@ -333,4 +419,114 @@ class _PreOrdersState extends State<PreOrders> {
       ),
     );
   }
+
+
+  getCategoryList()async
+  {
+    final productSnapshot = await FirebaseFirestore.instance.collection('categories').get();
+    final preferenceDataStorage = await SharedPreferences
+        .getInstance();
+    List<dynamic>c=    productSnapshot.docs.toList();
+
+    // Navigator.pop(context);
+    for(int i=0;i<c.length;i++) {
+      QueryDocumentSnapshot ab = c[i];
+
+      var m = ab.data() as Map<String, dynamic>;
+
+
+      String id = ab.id;
+      String name = m['name'] ?? '';
+      String path = m['image_path'] ?? '';
+
+      setState(() {
+        list.add(new CategoryData(id,name,path));
+      });
+
+
+    }
+
+  }
+
+
+
+  getProductList()async
+  {
+    final productSnapshot = await FirebaseFirestore.instance.collection('product_master').get();
+
+    List<dynamic>c=    productSnapshot.docs.toList();
+
+
+
+    for(int i=0;i<c.length;i++) {
+      QueryDocumentSnapshot ab = c[i];
+
+      var m = ab.data() as Map<String, dynamic>;
+
+      String id = ab.id;
+      String name = m['name'] ?? '';
+      String path = m['image'] ?? '';
+      String category = m['category'] ?? '';
+
+      setState(() {
+
+
+          list_products.add(new Products(id,name,path,"",""));
+
+
+
+      });
+    }
+
+
+    for(int i=0;i<list_products.length;i++) {
+
+      String productid=list_products[i].id;
+
+      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance.collection('products').where('id', isEqualTo: productid).get();
+
+
+      List<dynamic>c1=    querySnapshot.docs.toList();
+
+
+      if(c1.length>0) {
+
+        QueryDocumentSnapshot ab1 = c1[0];
+
+        var m1 = ab1.data() as Map<String, dynamic>;
+
+        String Amount=m1['Amount'];
+        String units=m1['units'];
+
+
+
+        setState(() {
+
+          list_products[i].price=Amount;
+
+        });
+        FirebaseFirestore.instance.collection('units').doc(units.trim()).get().then((value1) {
+          var m3=value1.data()!;
+          String unitname=m3['name'];
+
+          setState(() {
+            list_products[i].unit=unitname;
+
+          });
+
+
+
+        });
+
+
+
+      }
+
+
+
+    }
+
+  }
+
+
 }

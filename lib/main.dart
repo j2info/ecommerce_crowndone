@@ -9,6 +9,7 @@ import 'package:ecommerce/constants/Constants.dart';
 import 'package:ecommerce/ui/dashboard.dart';
 import 'package:ecommerce/ui/home.dart';
 import 'package:ecommerce/ui/adminhome.dart';
+import 'package:ecommerce/ui/membership.dart';
 
 // Import Firebase Core
 
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

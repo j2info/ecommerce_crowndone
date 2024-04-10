@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'productdetailspage.dart';
+import 'package:ecommerce/ui/admin/Addproductdetailspage.dart';
 import 'productunit.dart';
 import 'orderedlist.dart';
 import 'pre_orders.dart';
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
 import 'package:ecommerce/ui/admin/category_page.dart';
 import 'package:ecommerce/ui/admin/uom_page.dart';
-
+import 'package:ecommerce/ui/admin/productlist_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
+import 'package:ecommerce/ui/login.dart';
+import 'package:ecommerce/ui/admin/wallet_request_list.dart';
+import 'package:ecommerce/ui/admin/sales_ordery_admin.dart';
+import 'package:ecommerce/ui/admin/payment_q_rcode.dart';
+import 'package:ecommerce/ui/admin/country_list.dart';
 
 class AdminHomePage extends StatefulWidget {
   @override
@@ -19,22 +26,71 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.home),
-            SizedBox(width:ResponsiveInfo.isMobile(context)? 20:25),
-            Text(
-              'Admin',
-              style: TextStyle(
-                fontSize: ResponsiveInfo.isMobile(context)? 14.0 :16.0,
-                fontWeight: FontWeight.bold,
-                color: Colors.white
-              ),
-            ),
-          ],
+        leading: IconButton(
+            icon: Icon(Icons.home, color: Colors.white),
+            onPressed: () {
+
+            }
         ),
+        title: Text("Admin Home",style: TextStyle(color: Colors.white,fontSize: 15),),
         backgroundColor: Colors.blue,
         elevation: 4.0,
+        actions: [
+          Padding(padding: EdgeInsets.all(15),
+
+            child: GestureDetector(
+              child: Icon(Icons.exit_to_app,color: Colors.white,size: ResponsiveInfo.isMobile(context)?30:35),
+
+              onTap: (){
+
+                Widget okButton = TextButton(
+                  child: Text("yes"),
+                  onPressed: ()async {
+
+                    final preferenceDataStorage = await SharedPreferences
+                        .getInstance();
+                    preferenceDataStorage.setString(Constants.pref_userid, "");
+                    preferenceDataStorage.setString(Constants.pref_usertype, "");
+
+                    Navigator.pop(context);
+
+
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => Login()));
+
+
+
+                  },
+                );
+
+                Widget okButton1 = TextButton(
+                  child: Text("no"),
+                  onPressed: () { },
+                );
+
+                // set up the AlertDialog
+                AlertDialog alert = AlertDialog(
+                  title: Text("Logout"),
+                  content: Text("Do you want to logout now ?"),
+                  actions: [
+                    okButton,
+                    okButton1
+                  ],
+                );
+
+                // show the dialog
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return alert;
+                  },
+                );
+              },
+
+            ),
+          )
+
+
+        ],
       ),
       body: Padding(
         padding: EdgeInsets.all(ResponsiveInfo.isMobile(context)?10:15),
@@ -58,13 +114,13 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
 
               GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: ResponsiveInfo.isMobile(context)?15:20,
-                  crossAxisSpacing: ResponsiveInfo.isMobile(context)?15:20,
+                  crossAxisCount: 3,
+                  mainAxisSpacing: ResponsiveInfo.isMobile(context)?7:10,
+                  crossAxisSpacing: ResponsiveInfo.isMobile(context)?7:10,
                   scrollDirection: Axis.vertical,
                   shrinkWrap: true,
                   primary: false,
-                  childAspectRatio: 1.5,
+                  childAspectRatio: 0.9,
                   children: [
                     _buildCategoryCard('User', Icons.person, () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => UserListPage()));
@@ -73,26 +129,60 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryPage()));
                     }),
                     _buildCategoryCard('Product', Icons.shopping_bag, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => AdminPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => ProductlistPage()));
                     }),
-                    _buildCategoryCard('Orders', Icons.add_shopping_cart, () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => OrderedListScreen()));
-                    }),
+                    // _buildCategoryCard('Orders', Icons.add_shopping_cart, () {
+                    //   Navigator.push(context, MaterialPageRoute(builder: (context) => OrderedListScreen()));
+                    // }),
                     _buildCategoryCard('Units', Icons.scale, () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => UomPage()));
                     }),
                     _buildCategoryCard('Sales Orders', Icons.list_alt, () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => PreOrders()), // Navigate to PreOrders page
+                        MaterialPageRoute(builder: (context) => SalesOrderyAdmin()), // Navigate to PreOrders page
                       );
                     }),
 
-                    _buildCategoryCard('Offers', Icons.local_offer_outlined, () {
+                    _buildCategoryCard('Wallet requests', Icons.wallet, () {
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => WalletRequestList()), // Navigate to PreOrders page
+                      );
+
+                    }),
+                    _buildCategoryCard('Membership types', Icons.card_membership, () {
 
                     }),
 
-                    _buildCategoryCard('wallet requests', Icons.wallet, () {
+
+
+                    _buildCategoryCard('Product\'s Offers', Icons.local_offer_outlined, () {
+
+                    }),
+
+                    _buildCategoryCard('Sale\'s Offers', Icons.local_offer, () {
+
+                    }),
+
+                    _buildCategoryCard('Country', Icons.flag, () {
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CountryList()), // Navigate to PreOrders page
+                      );
+
+                    }),
+
+                    _buildCategoryCard('Payment QR code', Icons.qr_code, () {
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => PaymentQRcode()), // Navigate to PreOrders page
+                      );
+
+
 
                     }),
 
@@ -133,18 +223,18 @@ class _AdminHomePageState extends State<AdminHomePage> {
       child: Card(
         elevation: 3,
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(6.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: 40,
+                size: 25,
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 5),
               Text(
                 title,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -160,6 +250,13 @@ class UserListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+            icon: Icon(Icons.home, color: Colors.white),
+            onPressed: () {
+Navigator.pop(context);
+            }
+        ),
+        backgroundColor: Colors.blue,
         title: Text('User List',style: TextStyle(fontSize:  ResponsiveInfo.isMobile(context)?13:15,color: Colors.white)),
       ),
       body: UserList(),

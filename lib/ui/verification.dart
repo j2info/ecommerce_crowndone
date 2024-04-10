@@ -1,15 +1,38 @@
 import 'package:ecommerce/designs/ResponsiveInfo.dart';
 import 'package:flutter/material.dart';
 import 'membership.dart';
+import 'package:ecommerce/ui/login.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:ecommerce/designs/ResponsiveInfo.dart';
+import 'package:ecommerce/domain/CategoryData.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecommerce/constants/Constants.dart';
 
 class Verification extends StatefulWidget {
-   Verification() ;
+
+  String id;
+
+
+   Verification(this.id) ;
 
   @override
-  _VerificationState createState() => _VerificationState();
+  _VerificationState createState() => _VerificationState(this.id);
 }
 
 class _VerificationState extends State<Verification> {
+
+
+
+  String id;
+
+  _VerificationState(this.id);
+
+
   TextEditingController usercontroller=new TextEditingController();
   TextEditingController passwordcontroller=new TextEditingController();
 
@@ -99,12 +122,28 @@ class _VerificationState extends State<Verification> {
                         ),
                         onPressed: ()async{
 
-                          Navigator.push(context,
-                              MaterialPageRoute(builder:
-                                  (context) =>
-                                      Membership()
-                              )
-                          );
+                          showLoaderDialog(context);
+
+                          await FirebaseFirestore.instance.collection('registration').doc(id).update({'isverified': true}).whenComplete(() async{
+
+                            final preferenceDataStorage = await SharedPreferences
+                                .getInstance();
+                            preferenceDataStorage.setString(Constants.pref_userid, id);
+                            preferenceDataStorage.setString(Constants.pref_usertype, Constants.normal_usertype);
+
+
+                            Navigator.pop(context);
+                            Navigator.push(context,
+                                MaterialPageRoute(builder:
+                                    (context) =>
+                                    Membership()
+                                )
+                            );
+
+                          });
+
+
+
 
 
 
@@ -174,12 +213,12 @@ class _VerificationState extends State<Verification> {
                                   onTap: (){
                                     print('hello');
 
-                                    // Navigator.push(context,
-                                    //     MaterialPageRoute(builder:
-                                    //         (context) =>
-                                    //         Registration()
-                                    //     )
-                                    // );
+                                    Navigator.push(context,
+                                        MaterialPageRoute(builder:
+                                            (context) =>
+                                            Login()
+                                        )
+                                    );
                                   },
                                   child: Text('Back to login',
                                     style: TextStyle(fontSize: ResponsiveInfo.isMobile(context)?14:17, color: Color(0xff2560ac),fontWeight: FontWeight.bold),)),
